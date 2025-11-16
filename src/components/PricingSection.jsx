@@ -18,14 +18,14 @@ export default function PricingSection({ isDark }) {
     },
     {
       name: "Pro",
-      price: "$12",
+      price: "$6",
       period: "per month",
       features: [
         "Unlimited Projects",
         "Advanced AST & Debugging",
         "Priority Support",
         "Private Projects",
-        "Team Collaboration (3 users)",
+        "Team Collaboration (5 users)",
       ],
       cta: "Start Free Trial",
       highlight: true,
