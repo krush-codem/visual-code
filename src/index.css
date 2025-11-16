@@ -1,0 +1,76 @@
+@import "tailwindcss";
+
+:root {
+  --cv-primary: #0046ff;
+  --cv-accent: #ff8040;
+
+  /* light mode values (overridden by .cv-light ) */
+  --cv-bg: 255 255 255;
+  --cv-surface: 255 255 255;
+  --cv-text-primary: #0b1220; /* slate-900ish */
+  --cv-text-secondary: #4b5563; /* slate-600 */
+  --cv-card-border: rgba(2, 6, 23, 0.06);
+  --cv-shadow: 0 8px 32px rgba(2, 6, 23, 0.06);
+}
+
+/* Light mode class (applied on <html> or root container) */
+.cv-light {
+  --cv-bg: 255 255 255;
+  --cv-surface: 247 250 255; /* light subtle */
+  --cv-text-primary: #0b1220;
+  --cv-text-secondary: #475569;
+  --cv-card-border: rgba(2, 6, 23, 0.06);
+  --cv-shadow: 0 8px 32px rgba(2, 6, 23, 0.06);
+}
+
+/* Dark default (no class needed) */
+.cv-dark {
+  --cv-bg: 3 6 10;
+  --cv-surface: 8 10 15;
+  --cv-text-primary: #e6eef8;
+  --cv-text-secondary: #9aa5b1;
+  --cv-card-border: rgba(255, 255, 255, 0.04);
+  --cv-shadow: 0 12px 40px rgba(4, 40, 80, 0.28);
+}
+
+/* Use css variables in utilities */
+.bg-cv {
+  background-color: rgb(var(--cv-bg) / 1);
+  color: var(--cv-text-primary);
+}
+
+/* polished nav hover underline */
+.nav-link {
+  position: relative;
+  transition: color 0.22s ease, transform 0.12s ease;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -6px;
+  height: 2px;
+  width: 0;
+  background: var(--cv-primary);
+  transition: width 0.25s ease;
+}
+.nav-link:hover::after {
+  width: 100%;
+}
+.nav-link:hover {
+  transform: translateY(-2px);
+}
+
+/* subtle glass / backdrop effect for cards */
+.card-glass {
+  background: rgba(var(--cv-surface), 0.06);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--cv-card-border);
+  box-shadow: var(--cv-shadow);
+}
+
+/* responsive spotlight variables (used by inline styles) */
+:root {
+  --mx: 50px;
+  --my: 50px;
+}
