@@ -1,16 +1,17 @@
 // src/components/CodeEditor.jsx
-import React from "react";
-import Editor from "@monaco-editor/react";
+import React from 'react';
+import Editor from '@monaco-editor/react';
 
-const CodeEditor = ({ content, onContentChange }) => {
+// 1. Accept the new 'language' prop
+const CodeEditor = ({ content, onContentChange, path, language }) => {
   return (
     <Editor
       height="100%"
-      language="javascript"
+      language={language} // 2. Use the prop here
       theme="vs-dark"
-      key={content.substring(0, 10)} // Your trick to reset state
+      key={path || 'scratchpad'} 
       value={content}
-      onChange={(value) => onContentChange(value || "")}
+      onChange={(value) => onContentChange(value || '')}
     />
   );
 };

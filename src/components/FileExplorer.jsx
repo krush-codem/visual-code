@@ -13,7 +13,7 @@ const FileExplorer = ({
   isDisabled,
 }) => {
   return (
-    <div className="p-2 flex flex-col h-full bg-blue-500">
+    <div className="p-2 flex flex-col h-full ">
       {/* 2. Add the toggle button to the header */}
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-semibold">File Explorer</h3>
