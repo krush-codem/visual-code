@@ -148,31 +148,24 @@ npm install lucide-react
 Initialize Tailwind:
 
 ```bash
-npx tailwindcss init -p
+npm install tailwindcss @tailwindcss/vite
 ```
 
-Update `tailwind.config.js`:
+Update `vite.config.js`:
 
 ```javascript
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
-  darkMode: "class",
-  theme: {
-    extend: {},
-  },
-  plugins: [],
-};
+import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+
+export default defineConfig({
+  plugins: [tailwindcss()],
+});
 ```
 
 Update `src/index.css`:
 
 ```css
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-* {
+@import "tailwindcss" * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -195,19 +188,7 @@ body {
 
 Create all component files in `src/components/` directory with the code provided in the next section.
 
-### Step 5: Update App.jsx
-
-```javascript
-import Landing from "./components/Landing";
-
-function App() {
-  return <Landing />;
-}
-
-export default App;
-```
-
-### Step 6: Run Development Server
+### Step 5: Run Development Server
 
 ```bash
 npm run dev
