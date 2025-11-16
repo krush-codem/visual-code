@@ -28,6 +28,7 @@ export default function Navbar({ theme, toggleTheme }) {
 
   return (
     <>
+      {/* NAVBAR */}
       <nav
         className={`w-full px-6 sm:px-10 py-4 flex items-center justify-between fixed top-0 left-0 z-50 transition-all duration-300 ${
           scrolled ? "backdrop-blur-xl" : ""
@@ -46,76 +47,9 @@ export default function Navbar({ theme, toggleTheme }) {
           boxShadow: scrolled ? "0 4px 24px rgba(0,0,0,0.08)" : "none",
         }}
       >
+        {/* LEFT SIDE → HAMBURGER + LOGO */}
         <div className="flex items-center gap-3">
-          <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
-            style={{
-              background: "linear-gradient(135deg,#0046FF 0%, #2b78ff 100%)",
-            }}
-          >
-            <Code2 className="w-6 h-6" />
-          </div>
-          <div
-            className={`text-lg font-bold ${
-              isDark ? "text-white" : "text-slate-900"
-            }`}
-          >
-            CodeVisualizer
-          </div>
-        </div>
-
-        {/* Desktop Nav */}
-        <ul className="hidden md:flex gap-8 items-center">
-          {navLinks.map((link, i) => (
-            <li key={i}>
-              <a
-                href={link.href}
-                className={`text-sm font-medium transition ${
-                  isDark
-                    ? "text-slate-200 hover:text-blue-400"
-                    : "text-slate-700 hover:text-blue-600"
-                }`}
-              >
-                {link.name}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        <div className="flex items-center gap-3">
-          {/* Theme Toggle */}
-          <button
-            onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="p-2 rounded-lg transition-all transform hover:scale-105 active:scale-95"
-            style={{
-              background: isDark
-                ? "rgba(255,255,255,0.06)"
-                : "rgba(2,6,23,0.05)",
-            }}
-          >
-            {isDark ? (
-              <Sun className="w-5 h-5 text-yellow-300" />
-            ) : (
-              <Moon className="w-5 h-5 text-slate-700" />
-            )}
-          </button>
-
-          {/* FIXED: Launch Button */}
-          <a
-            href="#workspace"
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95"
-            style={{
-              background: "linear-gradient(90deg,#0046FF 0%, #2b78ff 100%)",
-              color: "white",
-              boxShadow: "0 4px 20px rgba(0,70,255,0.25)",
-            }}
-          >
-            <Play className="w-4 h-4" />
-            Launch Now
-          </a>
-
-          {/* Hamburger */}
+          {/* LEFT HAMBURGER (ONLY ONE) */}
           <button
             className="md:hidden p-2 rounded-lg transition-all"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -170,10 +104,81 @@ export default function Navbar({ theme, toggleTheme }) {
               </svg>
             )}
           </button>
+
+          {/* LOGO */}
+          <div
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
+            style={{
+              background: "linear-gradient(135deg,#0046FF 0%, #2b78ff 100%)",
+            }}
+          >
+            <Code2 className="w-6 h-6" />
+          </div>
+
+          <div
+            className={`text-lg font-bold ${
+              isDark ? "text-white" : "text-slate-900"
+            }`}
+          >
+            CodeVisualizer
+          </div>
+        </div>
+
+        {/* CENTER — DESKTOP NAV */}
+        <ul className="hidden md:flex gap-8 items-center">
+          {navLinks.map((link, i) => (
+            <li key={i}>
+              <a
+                href={link.href}
+                className={`text-sm font-medium transition ${
+                  isDark
+                    ? "text-slate-200 hover:text-blue-400"
+                    : "text-slate-700 hover:text-blue-600"
+                }`}
+              >
+                {link.name}
+              </a>
+            </li>
+          ))}
+        </ul>
+
+        {/* RIGHT SIDE → THEME + LAUNCH */}
+        <div className="flex items-center gap-3">
+          {/* THEME TOGGLE */}
+          <button
+            onClick={toggleTheme}
+            aria-label="Toggle theme"
+            className="p-2 rounded-lg transition-all transform hover:scale-105 active:scale-95"
+            style={{
+              background: isDark
+                ? "rgba(255,255,255,0.06)"
+                : "rgba(2,6,23,0.05)",
+            }}
+          >
+            {isDark ? (
+              <Sun className="w-5 h-5 text-yellow-300" />
+            ) : (
+              <Moon className="w-5 h-5 text-slate-700" />
+            )}
+          </button>
+
+          {/* LAUNCH BUTTON */}
+          <a
+            href="#workspace"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95"
+            style={{
+              background: "linear-gradient(90deg,#0046FF 0%, #2b78ff 100%)",
+              color: "white",
+              boxShadow: "0 4px 20px rgba(0,70,255,0.25)",
+            }}
+          >
+            <Play className="w-4 h-4" />
+            Launch Now
+          </a>
         </div>
       </nav>
 
-      {/* Mobile Menu */}
+      {/* MOBILE MENU PANEL */}
       <div
         className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${
           mobileMenuOpen
@@ -222,7 +227,6 @@ export default function Navbar({ theme, toggleTheme }) {
             ))}
           </ul>
 
-          {/* FIXED: Mobile Launch Button */}
           <a
             href="#workspace"
             onClick={closeMobileMenu}
@@ -238,21 +242,14 @@ export default function Navbar({ theme, toggleTheme }) {
             Launch Workspace
           </a>
 
-          <div
-            className="mt-12 text-center transition-all duration-300"
-            style={{
-              opacity: mobileMenuOpen ? 1 : 0,
-              transitionDelay: "250ms",
-            }}
+          <p
+            className={`mt-12 text-sm transition-opacity duration-300 ${
+              isDark ? "text-slate-400" : "text-slate-600"
+            }`}
+            style={{ opacity: mobileMenuOpen ? 1 : 0 }}
           >
-            <p
-              className={`text-sm ${
-                isDark ? "text-slate-400" : "text-slate-600"
-              }`}
-            >
-              Ready to transform your workflow?
-            </p>
-          </div>
+            Ready to transform your workflow?
+          </p>
         </div>
       </div>
     </>
