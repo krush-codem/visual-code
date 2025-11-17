@@ -1,23 +1,17 @@
-// src/App.jsx
-
 import React, { useState, useEffect, useCallback } from "react";
-import Editor from "@monaco-editor/react";
 import {
   ReactFlow,
   useNodesState,
   useEdgesState,
   addEdge,
-  Controls,
-  Background,
 } from "@xyflow/react";
 import * as babelParser from "@babel/parser";
 import traverse from "@babel/traverse";
 import path from "path-browserify";
 
-// --- NEW IMPORTS ---
-import { useDebounce } from "./hooks/useDebounce";
 import LoadingScreen from "./components/LoadingScreen";
 import ReadmeModal from "./components/ReadmeModal";
+
 import {
   processDirectory,
   resolveImportPath,
@@ -25,209 +19,247 @@ import {
   generateFeatureBullets,
 } from "./utils/utils";
 
-// --- ADD THESE LINES ---
-import FileExplorer from './components/FileExplorer';
-import CodeEditor from './components/CodeEditor';
-import Visualizer from './components/Visualizer';
+// NEW COMPONENTS
+import FileExplorer from "./components/FileExplorer";
+import CodeEditor from "./components/CodeEditor";
+import Visualizer from "./components/Visualizer";
+import HistoryPanel from "./components/HistoryPanel";
 
+// NEW HOOK (IndexedDB Auto-Save)
+import useAutoSaveIndexed from "./hooks/useAutoSaveIndexed";
+
+// UI RESIZERS
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 
-// --- CSS (Keep this) ---
 import "@xyflow/react/dist/style.css";
 
 function App() {
-  // --- STATE ---
+  // -------------------------------
+  // STATE
+  // -------------------------------
+
   const [projectFiles, setProjectFiles] = useState([]);
   const [activeFileContent, setActiveFileContent] = useState(
     '// Click "Open Folder" to start'
   );
+
   const [showReadme, setShowReadme] = useState(false);
   const [readmeContent, setReadmeContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const [nodes, setNodes, onNodesChange] = useNodesState([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+
+  const [showHistory, setShowHistory] = useState(false);
+
   const onConnect = useCallback(
     (params) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
 
-  // --- HANDLERS ---
+  // -------------------------------
+  // IndexedDB Auto-save Hook
+  // -------------------------------
+
+  const {
+    saveSnapshot,
+    historyEntries,
+    restoreSnapshot,
+    isReady: historyReady,
+  } = useAutoSaveIndexed();
+
+  // Load last session
+  useEffect(() => {
+    if (!historyReady) return;
+
+    const last = historyEntries[0];
+    if (last) setActiveFileContent(last.code);
+  }, [historyReady]);
+
+  // Auto-save every time editor changes
+  useEffect(() => {
+    if (activeFileContent) saveSnapshot(activeFileContent);
+  }, [activeFileContent]);
+
+  // -------------------------------
+  // OPEN FOLDER
+  // -------------------------------
+
   const handleFolderOpen = async () => {
     try {
       setIsLoading(true);
+
       const directoryHandle = await window.showDirectoryPicker();
-      const allFiles = await processDirectory(directoryHandle); // from utils
+      const allFiles = await processDirectory(directoryHandle);
 
       setProjectFiles(allFiles);
 
-      const entryFile = allFiles.find(
-        (f) => f.path.endsWith("index.js") || f.path.endsWith("App.js")
-      );
-      if (entryFile) {
-        setActiveFileContent(entryFile.content);
-      } else if (allFiles.length > 0) {
-        setActiveFileContent(allFiles[0].content);
-      }
+      const entryFile =
+        allFiles.find(
+          (f) => f.path.endsWith("index.js") || f.path.endsWith("App.js")
+        ) || allFiles[0];
+
+      if (entryFile) setActiveFileContent(entryFile.content);
+
       setIsLoading(false);
     } catch (err) {
-      console.error("Error opening folder (or user cancelled):", err);
+      console.error("Folder open error:", err);
       setIsLoading(false);
     }
   };
+
+  // -------------------------------
+  // FILE CLICK
+  // -------------------------------
 
   const handleFileClick = (file) => {
     setActiveFileContent(file.content);
   };
 
+  // -------------------------------
+  // README GENERATION
+  // -------------------------------
+
   const handleGenerateReadme = () => {
     const pkgFile = projectFiles.find((f) => f.path.endsWith("package.json"));
-    if (!pkgFile) {
-      alert("Could not find package.json in the project.");
-      return;
-    }
+
+    if (!pkgFile) return alert("package.json not found.");
+
     try {
       const pkg = JSON.parse(pkgFile.content);
-      let projectName = pkg.name || "My Project";
-      let description =
-        pkg.description ||
-        "A description of the project. (Update this in your package.json!)";
 
-      let installation = `\`\`\`bash\nnpm install\n\`\`\``;
+      const projectName = pkg.name || "My Project";
+      const description = pkg.description || "A description of the project.";
+
+      const installation = `\`\`\`bash
+npm install
+\`\`\``;
+
       const scripts = pkg.scripts
         ? Object.entries(pkg.scripts)
-            .map(
-              ([name, command]) => `- \`npm run ${name}\`: Runs \`${command}\``
-            )
+            .map(([name, cmd]) => `- \`npm run ${name}\`: Runs \`${cmd}\``)
             .join("\n")
         : "*No scripts found.*";
-      let usage = `To run this project, use the following scripts:\n\n${scripts}`;
+
       const deps = pkg.dependencies
         ? Object.keys(pkg.dependencies)
             .map((d) => `- \`${d}\``)
             .join("\n")
         : "*None*";
-      let dependencies = `### Dependencies\n${deps}\n\n`;
+
       const devDeps = pkg.devDependencies
         ? Object.keys(pkg.devDependencies)
             .map((d) => `- \`${d}\``)
             .join("\n")
         : "";
-      if (devDeps) {
-        dependencies += `### Dev Dependencies\n${devDeps}`;
-      }
 
-      const featureBullets = generateFeatureBullets(pkg, projectFiles); // from utils
-      const fileTree = buildFileTree(projectFiles); // from utils
+      const featureBullets = generateFeatureBullets(pkg, projectFiles);
+      const fileTree = buildFileTree(projectFiles);
 
-      const mdContent = `
+      const md = `
 # ${projectName}
 ${description}
+
 ## ✨ Key Features
 ${featureBullets}
+
 ## 🚀 Installation
 ${installation}
-## Usage
-${usage}
+
 ## 📂 Project Structure
 \`\`\`
 ${fileTree}
 \`\`\`
-## External Dependencies
-${dependencies}
-## 🤝 Contributing
-Contributions are welcome!
-## 📄 License
-*This project is not licensed.*
-## 📞 Contact
-*your-email@example.com*
+
+## 📦 Scripts
+${scripts}
+
+## Dependencies
+${deps}
+
+${devDeps ? `### Dev Dependencies\n${devDeps}` : ""}
+
 ---
-*This README was auto-generated by CodeFlow IDE.*
+*Auto-generated by CodeFlow IDE.*
 `;
 
-      setReadmeContent(mdContent);
+      setReadmeContent(md);
       setShowReadme(true);
     } catch (err) {
-      alert("Failed to parse package.json: " + err.message);
+      alert("Failed to parse package.json");
     }
   };
 
-  // --- EFFECTS ---
+  // -------------------------------
+  // AST GRAPH BUILDER
+  // -------------------------------
+
   useEffect(() => {
-    if (projectFiles.length === 0) {
+    if (!projectFiles.length) {
       setNodes([]);
       setEdges([]);
       return;
     }
-    const allFilePaths = projectFiles.map((f) => f.path);
-    const newNodes = [];
-    const newEdges = [];
+
+    const allPaths = projectFiles.map((f) => f.path);
+
+    const n = [];
+    const e = [];
+
+    // Build nodes
     projectFiles.forEach((file, i) => {
-      newNodes.push({
+      n.push({
         id: file.path,
         data: { label: path.basename(file.path) },
-        position: { x: (i % 5) * 200, y: Math.floor(i / 5) * 100 },
+        position: {
+          x: (i % 5) * 200,
+          y: Math.floor(i / 5) * 120,
+        },
       });
     });
+
+    // Build edges
     projectFiles.forEach((file) => {
-      if (!/\.(js|jsx|ts|tsx)$/.test(file.path)) {
-        return;
-      }
+      if (!/\.(js|jsx|ts|tsx)$/.test(file.path)) return;
+
       try {
         const ast = babelParser.parse(file.content, {
           sourceType: "module",
           plugins: ["jsx", "typescript"],
-          errorRecovery: true,
         });
+
         traverse(ast, {
           ImportDeclaration({ node }) {
             const importPath = node.source.value;
-            const resolvedPath = resolveImportPath(
-              file.path,
-              importPath,
-              allFilePaths
-            ); // from utils
-            if (resolvedPath && allFilePaths.includes(resolvedPath)) {
-              newEdges.push({
-                id: `e-${file.path}-to-${resolvedPath}`,
-                source: resolvedPath,
+            const resolved = resolveImportPath(file.path, importPath, allPaths);
+
+            if (resolved && allPaths.includes(resolved)) {
+              e.push({
+                id: `e-${file.path}-${resolved}`,
+                source: resolved,
                 target: file.path,
                 animated: true,
-              });
-            } else if (resolvedPath) {
-              if (!newNodes.find((n) => n.id === resolvedPath)) {
-                newNodes.push({
-                  id: resolvedPath,
-                  data: { label: resolvedPath },
-                  position: {
-                    x: Math.random() * 500,
-                    y: Math.random() * 500 + 400,
-                  },
-                  style: { background: "#fdd", borderColor: "#f00" },
-                });
-              }
-              newEdges.push({
-                id: `e-${file.path}-to-${resolvedPath}`,
-                source: resolvedPath,
-                target: file.path,
-                label: "external",
               });
             }
           },
         });
       } catch (err) {
-        console.error(`Could not parse ${file.path}: ${err.message}`);
+        console.warn("Parse error:", file.path);
       }
     });
-    setNodes(newNodes);
-    setEdges(newEdges);
-  }, [projectFiles, setNodes, setEdges]);
 
-  // --- RENDER ---
+    setNodes(n);
+    setEdges(e);
+  }, [projectFiles]);
+
+  // -------------------------------
+  // RENDER
+  // -------------------------------
+
   return (
     <div className="h-screen w-screen bg-background text-foreground">
       {isLoading && <LoadingScreen />}
@@ -239,23 +271,34 @@ Contributions are welcome!
         />
       )}
 
-      {/* This is the new layout */}
+      {showHistory && (
+        <HistoryPanel
+          historyEntries={historyEntries}
+          onClose={() => setShowHistory(false)}
+          onRestore={(entry) => {
+            restoreSnapshot(entry);
+            setShowHistory(false);
+          }}
+        />
+      )}
+
       <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-        {/* Panel 1: File Explorer */}
-        <ResizablePanel defaultSize={20} minSize={15}>
+        {/* LEFT PANEL — FILES */}
+        <ResizablePanel minSize={15} defaultSize={20}>
           <FileExplorer
             projectFiles={projectFiles}
             onFolderOpen={handleFolderOpen}
             onReadmeGen={handleGenerateReadme}
             onFileClick={handleFileClick}
+            onOpenHistory={() => setShowHistory(true)}
             isDisabled={projectFiles.length === 0}
           />
         </ResizablePanel>
 
         <ResizableHandle withHandle />
 
-        {/* Panel 2: Code Editor */}
-        <ResizablePanel defaultSize={40} minSize={30}>
+        {/* MIDDLE — EDITOR */}
+        <ResizablePanel minSize={30} defaultSize={40}>
           <CodeEditor
             content={activeFileContent}
             onContentChange={setActiveFileContent}
@@ -264,8 +307,8 @@ Contributions are welcome!
 
         <ResizableHandle withHandle />
 
-        {/* Panel 3: Visualizer */}
-        <ResizablePanel defaultSize={40} minSize={30}>
+        {/* RIGHT — VISUALIZER */}
+        <ResizablePanel minSize={30} defaultSize={40}>
           <Visualizer
             nodes={nodes}
             edges={edges}
