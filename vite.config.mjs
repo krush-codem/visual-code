@@ -38,15 +38,36 @@
 // });
 
 // vite.config.mjs
+// import { defineConfig } from "vite";
+// import react from "@vitejs/plugin-react";
+// import path from "path";
+// import { fileURLToPath } from "url"; // <-- Import this
+
+// // --- This is the correct way to get __dirname in ES Modules ---
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+// // -------------------------------------------------------------
+
+// export default defineConfig({
+//   plugins: [react()],
+//   define: {
+//     "process.env": "{}",
+//   },
+//   resolve: {
+//     alias: {
+//       "@": path.resolve(__dirname, "./src"), // <-- This now works
+//     },
+//   },
+// });
+
+// vite.config.mjs
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
-import { fileURLToPath } from "url"; // <-- Import this
+import { fileURLToPath } from "url";
 
-// --- This is the correct way to get __dirname in ES Modules ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-// -------------------------------------------------------------
 
 export default defineConfig({
   plugins: [react()],
@@ -55,7 +76,21 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"), // <-- This now works
+      "@": path.resolve(__dirname, "./src"),
     },
   },
+
+  // --- ADD THIS SECTION ---
+  optimizeDeps: {
+    // Don't pre-bundle web-tree-sitter
+    exclude: ["web-tree-sitter"],
+  },
+
+  server: {
+    fs: {
+      // Allow serving files from the root directory
+      allow: ["."],
+    },
+  },
+  // -------------------------
 });

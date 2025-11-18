@@ -13,7 +13,7 @@ const FileExplorer = ({
   isDisabled,
 }) => {
   return (
-    <div className="p-2 flex flex-col h-full ">
+    <div className="p-2 flex flex-col flex-1 min-h-0">
       {/* 2. Add the toggle button to the header */}
       <div className="flex justify-between items-center mb-2">
         <h3 className="text-lg font-semibold">File Explorer</h3>
@@ -30,11 +30,12 @@ const FileExplorer = ({
           disabled={isDisabled}
           variant="secondary"
         >
-          <FileText className="mr-2 h-4 w-4" /> Generate README
+          <FileText className="mr-2 h-4 w-4" /> Gen. File Stru.
         </Button>
       </div>
 
-      <ScrollArea className="grow border rounded-md">
+      {/* FIX: Use 'flex-1' to force the area to shrink and scroll */}
+      <ScrollArea className="flex-1 border rounded-md h-full">
         <ul className="p-2">
           {projectFiles.map((file) => (
             <li

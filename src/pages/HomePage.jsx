@@ -15,13 +15,13 @@ const HomePage = () => {
         <Button asChild size="lg">
           <Link to="/project">
             <LayoutGrid className="mr-2 h-5 w-5" />
-            Project Visualizer
+            JSX-Proj Visualizer
           </Link>
         </Button>
         <Button asChild size="lg" variant="secondary">
           <Link to="/live">
             <CodeSquare className="mr-2 h-5 w-5" />
-            Live Code Editor
+            Live Visualizer
           </Link>
         </Button>
       </div>

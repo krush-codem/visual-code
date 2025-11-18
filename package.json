@@ -13,13 +13,16 @@
     "@babel/parser": "^7.28.5",
     "@babel/types": "^7.28.5",
     "@monaco-editor/react": "^4.7.0",
+    "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-switch": "^1.2.6",
     "@tailwindcss/vite": "^4.1.17",
     "@xyflow/react": "^12.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "css-tree": "^3.1.0",
+    "java-parser": "^3.0.1",
     "lucide-react": "^0.553.0",
     "next-themes": "^0.4.6",
     "path-browserify": "^1.0.1",
@@ -29,7 +32,8 @@
     "react-router-dom": "^7.9.6",
     "reactflow": "^11.11.4",
     "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.17"
+    "tailwindcss": "^4.1.17",
+    "web-tree-sitter": "^0.25.10"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
