@@ -20,14 +20,14 @@ export default function CTASection({ isDark }) {
             Start Building Now
             <ArrowRight className="w-5 h-5" />
           </a>
-          <a
+          {/* <a
             href="#contact"
             className={`inline-flex items-center justify-center gap-2 px-8 py-4 rounded-xl font-semibold transition-all ${
               isDark ? "bg-white/5 text-white hover:bg-white/10" : "bg-gray-100 text-slate-900 hover:bg-gray-200"
             }`}
           >
             Talk to Sales
-          </a>
+          </a> */}
         </div>
       </div>
     </section>

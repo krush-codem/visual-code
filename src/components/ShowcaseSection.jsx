@@ -20,6 +20,13 @@ export default function ShowcaseSection({ isDark }) {
     },
   ];
 
+  // 🔥 Soft, polished, professional card colors (light mode only)
+  const lightColors = [
+    "#F3F8FF", // soft blue
+    "#FFF7F0", // soft peach
+    "#F4FFF6", // soft mint green
+  ];
+
   return (
     <section
       id="showcase"
@@ -48,9 +55,11 @@ export default function ShowcaseSection({ isDark }) {
             <div
               key={i}
               className={`p-8 rounded-2xl text-center ${
-                isDark ? "bg-white/5" : "bg-gray-50"
+                isDark ? "bg-white/5" : ""
               }`}
               style={{
+                // ✨ Apply unique bg color only in light mode
+                background: isDark ? "rgba(255,255,255,0.05)" : lightColors[i],
                 border: isDark
                   ? "1px solid rgba(255,255,255,0.06)"
                   : "1px solid rgba(0,0,0,0.06)",
@@ -59,6 +68,7 @@ export default function ShowcaseSection({ isDark }) {
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-full mb-4 bg-blue-500/10 text-blue-500">
                 {item.icon}
               </div>
+
               <div
                 className={`text-4xl font-bold mb-2 ${
                   isDark ? "text-white" : "text-slate-900"
@@ -66,6 +76,7 @@ export default function ShowcaseSection({ isDark }) {
               >
                 {item.metric}
               </div>
+
               <div
                 className={`${isDark ? "text-slate-400" : "text-slate-600"}`}
               >

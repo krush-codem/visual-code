@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Sun, Moon, Code2, Play, X } from "lucide-react";
+import { Sun, Moon, Code2, Play, Rocket, AlertCircle, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function Navbar({ theme, toggleTheme }) {
   const isDark = theme === "dark";
@@ -7,12 +8,10 @@ export default function Navbar({ theme, toggleTheme }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => setScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const closeMobileMenu = () => setMobileMenuOpen(false);
 
   useEffect(() => {
     document.body.style.overflow = mobileMenuOpen ? "hidden" : "unset";
@@ -27,114 +26,91 @@ export default function Navbar({ theme, toggleTheme }) {
   ];
 
   return (
-    <>
-      {/* NAVBAR */}
-      <nav
-        className={`w-full px-6 sm:px-10 py-4 flex items-center justify-between fixed top-0 left-0 z-50 transition-all duration-300 ${
-          scrolled ? "backdrop-blur-xl" : ""
-        }`}
+    <motion.div layout>
+      {/* ░░ BETA ANNOUNCEMENT BAR WITH GRADIENT ░░ */}
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: -15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="fixed top-0 left-0 w-full z-50 flex items-center justify-center px-3"
         style={{
-          background: scrolled
-            ? isDark
-              ? "rgba(3,7,18,0.85)"
-              : "rgba(255,255,255,0.85)"
-            : isDark
-            ? "rgba(3,7,18,0.72)"
-            : "rgba(255,255,255,0.95)",
-          borderBottom: isDark
-            ? "1px solid rgba(255,255,255,0.06)"
-            : "1px solid rgba(2,6,23,0.08)",
-          boxShadow: scrolled ? "0 4px 24px rgba(0,0,0,0.08)" : "none",
+          height: "42px",
+          background:
+            "linear-gradient(90deg,#302b63 0%, #0f0c29 50%, #302b63 100%)",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.25)",
         }}
       >
-        {/* LEFT SIDE → HAMBURGER + LOGO */}
+        <RotatingBetaText />
+      </motion.div>
+
+      {/* ░░ NAVBAR ░░ */}
+      <motion.nav
+        layout
+        className="w-full flex items-center justify-between fixed left-0 z-40 px-6 sm:px-10"
+        style={{
+          top: "42px",
+          height: "64px",
+
+          /* Glass transparency for light + dark mode */
+          background: isDark
+            ? "rgba(0, 0, 0, 0.95)"
+            : "rgba(255, 255, 255, 0.82)",
+
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+
+          borderBottom: scrolled ? "1px solid rgba(255,255,255,0.08)" : "none",
+
+          boxShadow: scrolled ? "0 4px 18px rgba(0,0,0,0.25)" : "none",
+        }}
+      >
+        {/* LEFT */}
         <div className="flex items-center gap-3">
-          {/* LEFT HAMBURGER (ONLY ONE) */}
           <button
             className="md:hidden p-2 rounded-lg transition-all"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            aria-label="Toggle mobile menu"
-            style={{
-              background: isDark
-                ? "rgba(255,255,255,0.06)"
-                : "rgba(2,6,23,0.05)",
-            }}
           >
             {mobileMenuOpen ? (
               <X
-                className={`w-6 h-6 ${
-                  isDark ? "text-white" : "text-slate-900"
-                }`}
+                className={`w-6 h-6 ${isDark ? "text-white" : "text-black"}`}
               />
             ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="26"
-                height="26"
-                viewBox="0 0 64 64"
-                fill="none"
-              >
-                <line
-                  x1="12"
-                  y1="20"
-                  x2="52"
-                  y2="20"
-                  stroke={isDark ? "#ffffff" : "#000000"}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="12"
-                  y1="32"
-                  x2="44"
-                  y2="32"
-                  stroke={isDark ? "#ffffff" : "#000000"}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                />
-                <line
-                  x1="12"
-                  y1="44"
-                  x2="36"
-                  y2="44"
-                  stroke={isDark ? "#ffffff" : "#000000"}
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                />
-              </svg>
+              <Code2
+                className={`w-6 h-6 ${isDark ? "text-white" : "text-black"}`}
+              />
             )}
           </button>
 
-          {/* LOGO */}
           <div
-            className="w-10 h-10 rounded-lg flex items-center justify-center text-white font-bold shadow-lg"
+            className="w-10 h-10 rounded-lg flex items-center justify-center text-white shadow-md"
             style={{
               background: "linear-gradient(135deg,#0046FF 0%, #2b78ff 100%)",
             }}
           >
-            <Code2 className="w-6 h-6" />
+            <Code2 className="w-6 h-6 text-white" />
           </div>
 
           <div
             className={`text-lg font-bold ${
-              isDark ? "text-white" : "text-slate-900"
+              isDark ? "text-white" : "text-black"
             }`}
           >
             CodeVisualizer
           </div>
         </div>
 
-        {/* CENTER — DESKTOP NAV */}
+        {/* NAV LINKS */}
         <ul className="hidden md:flex gap-8 items-center">
-          {navLinks.map((link, i) => (
-            <li key={i}>
+          {navLinks.map((link) => (
+            <li key={link.name}>
               <a
-                href={link.href}
-                className={`text-sm font-medium transition ${
+                className={`text-sm font-medium transition-colors ${
                   isDark
                     ? "text-slate-200 hover:text-blue-400"
-                    : "text-slate-700 hover:text-blue-600"
+                    : "text-slate-800 hover:text-blue-600"
                 }`}
+                href={link.href}
               >
                 {link.name}
               </a>
@@ -142,116 +118,83 @@ export default function Navbar({ theme, toggleTheme }) {
           ))}
         </ul>
 
-        {/* RIGHT SIDE → THEME + LAUNCH */}
+        {/* RIGHT BUTTONS */}
         <div className="flex items-center gap-3">
           {/* THEME TOGGLE */}
           <button
             onClick={toggleTheme}
-            aria-label="Toggle theme"
-            className="p-2 rounded-lg transition-all transform hover:scale-105 active:scale-95"
-            style={{
-              background: isDark
-                ? "rgba(255,255,255,0.06)"
-                : "rgba(2,6,23,0.05)",
-            }}
+            className="p-2 rounded-lg bg-white/10 transition-none"
           >
             {isDark ? (
               <Sun className="w-5 h-5 text-yellow-300" />
             ) : (
-              <Moon className="w-5 h-5 text-slate-700" />
+              <Moon className="w-5 h-5 text-black" />
             )}
           </button>
 
-          {/* LAUNCH BUTTON */}
+          {/* LAUNCH BUTTON — CLEAN + NO GLOW */}
           <a
             href="#workspace"
-            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all transform hover:scale-105 active:scale-95"
+            className="hidden sm:inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-white font-semibold transition-none"
             style={{
               background: "linear-gradient(90deg,#0046FF 0%, #2b78ff 100%)",
-              color: "white",
-              boxShadow: "0 4px 20px rgba(0,70,255,0.25)",
+              boxShadow: "none",
+              filter: "none",
+              transform: "none",
             }}
           >
             <Play className="w-4 h-4" />
             Launch Now
           </a>
         </div>
-      </nav>
+      </motion.nav>
 
-      {/* MOBILE MENU PANEL */}
-      <div
-        className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${
-          mobileMenuOpen
-            ? "opacity-100 pointer-events-auto"
-            : "opacity-0 pointer-events-none"
-        }`}
-        style={{
-          background: isDark
-            ? "rgba(7, 10, 16, 0.95)"
-            : "rgba(255, 255, 255, 0.95)",
-          backdropFilter: "blur(20px)",
-        }}
-        onClick={closeMobileMenu}
+      {/* Prevents overlap */}
+      <div style={{ height: "106px" }} />
+    </motion.div>
+  );
+}
+
+/* ░░ ROTATING BETA TEXT COMPONENT ░░ */
+function RotatingBetaText() {
+  const messages = [
+    {
+      icon1: <AlertCircle className="w-4 h-4 text-yellow-300" />,
+      icon2: <Rocket className="w-4 h-4 text-pink-300 animate-pulse" />,
+      text: "Beta Access Active — The full experience is launching soon.",
+    },
+    {
+      icon1: <Rocket className="w-4 h-4 text-pink-300 animate-pulse" />,
+      icon2: <span className="text-lg">✨</span>,
+      text: "Experience the next-gen code visualizer — Faster, smarter, smoother.",
+    },
+  ];
+
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % messages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const item = messages[index];
+
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={index}
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 10 }}
+        transition={{ duration: 0.45, ease: "easeOut" }}
+        className="flex items-center gap-2 text-white text-sm font-medium"
       >
-        <div
-          className={`flex flex-col items-center justify-center h-full px-8 transition-transform duration-300 ${
-            mobileMenuOpen ? "translate-y-0" : "-translate-y-full"
-          }`}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <ul className="space-y-8 text-center mb-12">
-            {navLinks.map((link, i) => (
-              <li
-                key={i}
-                className="transform transition-all duration-300"
-                style={{
-                  transitionDelay: mobileMenuOpen ? `${i * 50}ms` : "0ms",
-                  opacity: mobileMenuOpen ? 1 : 0,
-                  transform: mobileMenuOpen
-                    ? "translateY(0)"
-                    : "translateY(-20px)",
-                }}
-              >
-                <a
-                  href={link.href}
-                  onClick={closeMobileMenu}
-                  className={`text-2xl font-semibold transition-colors ${
-                    isDark
-                      ? "text-white hover:text-blue-400"
-                      : "text-slate-900 hover:text-blue-600"
-                  }`}
-                >
-                  {link.name}
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          <a
-            href="#workspace"
-            onClick={closeMobileMenu}
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-xl font-semibold text-white transition-all transform hover:scale-105 active:scale-95 shadow-2xl"
-            style={{
-              background: "linear-gradient(90deg,#0046FF 0%, #2b78ff 100%)",
-              opacity: mobileMenuOpen ? 1 : 0,
-              transform: mobileMenuOpen ? "scale(1)" : "scale(0.9)",
-              transitionDelay: "200ms",
-            }}
-          >
-            <Play className="w-5 h-5" />
-            Launch Workspace
-          </a>
-
-          <p
-            className={`mt-12 text-sm transition-opacity duration-300 ${
-              isDark ? "text-slate-400" : "text-slate-600"
-            }`}
-            style={{ opacity: mobileMenuOpen ? 1 : 0 }}
-          >
-            Ready to transform your workflow?
-          </p>
-        </div>
-      </div>
-    </>
+        {item.icon1}
+        {item.icon2}
+        <span>{item.text}</span>
+      </motion.div>
+    </AnimatePresence>
   );
 }

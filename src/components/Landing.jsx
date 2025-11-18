@@ -4,7 +4,7 @@ import HeroSection from "./HeroSection";
 import FeaturesSection from "./FeaturesSection";
 import HowItWorksSection from "./HowItWorksSection";
 import ShowcaseSection from "./ShowcaseSection";
-import PricingSection from "./PricingSection";
+// import PricingSection from "./PricingSection";
 import CTASection from "./CTASection";
 import Footer from "./Footer";
 
@@ -55,7 +55,7 @@ export default function Landing() {
         <FeaturesSection isDark={isDark} />
         <HowItWorksSection isDark={isDark} />
         <ShowcaseSection isDark={isDark} />
-        <PricingSection isDark={isDark} />
+        {/* <PricingSection isDark={isDark} /> */}
         <CTASection isDark={isDark} />
         <Footer isDark={isDark} />
       </main>
