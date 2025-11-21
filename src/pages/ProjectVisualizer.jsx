@@ -1,5 +1,4 @@
 // src/pages/ProjectVisualizer.jsx
-
 import React, { useState, useEffect, useCallback } from "react";
 import { useNodesState, useEdgesState, addEdge } from "@xyflow/react";
 import * as babelParser from "@babel/parser";
@@ -7,8 +6,8 @@ import traverse from "@babel/traverse";
 import * as babelTypes from "@babel/types";
 import * as csstree from "css-tree";
 import path from "path-browserify";
-import { Link } from "react-router-dom"; // <-- ADD THIS
-import { Home } from "lucide-react"; // <-- ADD THIS
+import { Link } from "react-router-dom";
+import { Home } from "lucide-react";
 
 // --- Component Imports ---
 import LoadingScreen from "@/components/LoadingScreen";
@@ -16,12 +15,14 @@ import ReadmeModal from "@/components/ReadmeModal";
 import FileExplorer from "@/components/FileExplorer";
 import CodeEditor from "@/components/CodeEditor";
 import Visualizer from "@/components/Visualizer";
-import { Button } from "@/components/ui/button"; // <-- ADD THIS
+import { Button } from "@/components/ui/button";
 import {
   ResizableHandle,
   ResizablePanel,
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
+
+import useAutoSaveIndexed from "@/hooks/useAutoSaveIndexed";
 
 // --- Hook Imports ---
 import { useDebounce } from "@/hooks/useDebounce";
@@ -32,11 +33,10 @@ import {
   resolveImportPath,
   buildFileTree,
   generateFeatureBullets,
-  walkDOM, // <-- IMPORTED FROM UTILS
-  walkBabelAST, // <-- IMPORTED FROM UTILS
+  walkDOM,
+  walkBabelAST,
 } from "@/utils";
 
-// --- CSS Imports ---
 import "@xyflow/react/dist/style.css";
 
 function ProjectVisualizer() {
@@ -65,8 +65,53 @@ function ProjectVisualizer() {
     [setEdges]
   );
 
+  const [showHistory, setShowHistory] = useState(false);
+  const {
+    saveSnapshot,
+    historyEntries,
+    restoreSnapshot,
+    isReady: historyReady,
+  } = useAutoSaveIndexed();
+
+  // Responsive flags
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+  const [mobileTab, setMobileTab] = useState("explorer"); // explorer | editor | visualizer
+
+  // Effect 1: Load last session on startup
+  useEffect(() => {
+    if (!historyReady) return;
+
+    // Optional: Only restore if the user hasn't opened a project yet
+    if (projectFiles.length === 0 && historyEntries.length > 0) {
+      const last = historyEntries[0];
+      if (last) setActiveFileContent(last.code);
+    }
+  }, [historyReady, historyEntries, projectFiles.length]);
+
+  // Effect 2: Auto-save every time editor changes
+  useEffect(() => {
+    if (
+      activeFileContent &&
+      activeFileContent !== '// Click "Open Folder" to start'
+    ) {
+      saveSnapshot(activeFileContent);
+    }
+  }, [activeFileContent, saveSnapshot]);
+
+  // watch resize
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setMobileTab("explorer");
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   // --- LOGIC HANDLERS ---
-  // ... (handleFolderOpen, handleFileClick, handleGenerateReadme are UNCHANGED) ...
   const handleFolderOpen = async () => {
     try {
       setIsLoading(true);
@@ -99,15 +144,12 @@ function ProjectVisualizer() {
     if (file.path.endsWith(".css")) setEditorLanguage("css");
     else if (file.path.endsWith(".html")) setEditorLanguage("html");
     else setEditorLanguage("javascript");
+    // on mobile, switch to editor automatically for a smoother experience
+    if (isMobile) setMobileTab("editor");
   };
 
   const handleGenerateReadme = () => {
-    // We don't need to parse package.json anymore since we only want the tree
-
-    // 1. Build the file tree string
     const fileTree = buildFileTree(projectFiles);
-
-    // 2. Create the simple Markdown content
     const mdContent = `
 # Project Structure
 
@@ -122,9 +164,7 @@ ${fileTree}
     setShowReadme(true);
   };
 
-  // --- CORE LOGIC (EFFECTS) ---
-
-  // ... (EFFECT 1, 2, 3 are UNCHANGED) ...
+  // CORE LOGIC: Build nodes/edges from project files
   useEffect(() => {
     setGraphableFiles(projectFiles);
   }, [projectFiles]);
@@ -209,10 +249,121 @@ ${fileTree}
     setEdges(newEdges);
   }, [graphableFiles, setNodes, setEdges]);
 
-  // --- EFFECT 4 (Scratchpad) IS NOW REMOVED ---
-  // Its logic will be moved to LiveCodePage.jsx
+  // Mobile top tab component
+  const MobileTabs = ({ current, onChange }) => (
+    <div className="fixed top-0 left-0 right-0 z-20 bg-card px-2 py-1 flex gap-1 border-b">
+      <button
+        className={`flex-1 py-2 rounded ${
+          current === "explorer" ? "bg-muted" : ""
+        }`}
+        onClick={() => onChange("explorer")}
+      >
+        Explorer
+      </button>
+      <button
+        className={`flex-1 py-2 rounded ${
+          current === "editor" ? "bg-muted" : ""
+        }`}
+        onClick={() => onChange("editor")}
+      >
+        Editor
+      </button>
+      <button
+        className={`flex-1 py-2 rounded ${
+          current === "visualizer" ? "bg-muted" : ""
+        }`}
+        onClick={() => onChange("visualizer")}
+      >
+        Visualizer
+      </button>
+    </div>
+  );
 
-  // --- RENDER (JSX) ---
+  // Render
+  if (isMobile) {
+    return (
+      <div className="h-screen w-screen bg-background text-foreground relative">
+        {isLoading && <LoadingScreen />}
+
+        {showReadme && (
+          <ReadmeModal
+            content={readmeContent}
+            onClose={() => setShowReadme(false)}
+          />
+        )}
+
+        <MobileTabs current={mobileTab} onChange={setMobileTab} />
+        <div className="h-full pt-12">
+          {" "}
+          {/* offset for fixed tabs */}
+          {mobileTab === "explorer" && (
+            <div className="h-full overflow-auto p-2">
+              {/* Back to home - visible and separate on mobile */}
+              <div className="mb-3">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="w-full mb-2"
+                >
+                  <Link to="/">
+                    <Home className="mr-2 h-4 w-4" /> Back to Home
+                  </Link>
+                </Button>
+              </div>
+
+              {/* Hide duplicate action buttons on small screens — top header already provides them */}
+              {!isMobile && (
+                <div className="mb-2">
+                  <Button onClick={handleFolderOpen} size="sm" className="mr-2">
+                    Open Folder
+                  </Button>
+                  <Button
+                    onClick={handleGenerateReadme}
+                    size="sm"
+                    disabled={projectFiles.length === 0}
+                  >
+                    Gen. File Stru.
+                  </Button>
+                </div>
+              )}
+
+              <FileExplorer
+                projectFiles={projectFiles}
+                onFolderOpen={handleFolderOpen}
+                onReadmeGen={handleGenerateReadme}
+                onFileClick={handleFileClick}
+                isDisabled={projectFiles.length === 0}
+              />
+            </div>
+          )}
+          {mobileTab === "editor" && (
+            <div className="h-full">
+              <CodeEditor
+                content={activeFileContent}
+                onContentChange={setActiveFileContent}
+                path={activeFilePath}
+                language={editorLanguage}
+              />
+            </div>
+          )}
+          {mobileTab === "visualizer" && (
+            <div className="h-full">
+              <Visualizer
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop / Tablet original resizable layout
   return (
     <div className="h-screen w-screen bg-background text-foreground">
       {isLoading && <LoadingScreen />}
@@ -225,9 +376,7 @@ ${fileTree}
       )}
 
       <ResizablePanelGroup direction="horizontal" className="h-full w-full">
-        {/* Panel 1: File Explorer */}
         <ResizablePanel defaultSize={20} minSize={15}>
-          {/* --- ADDED A WRAPPER DIV --- */}
           <div className="p-2 flex flex-col h-full min-h-0">
             <Button asChild variant="outline" size="sm" className="mb-2">
               <Link to="/">

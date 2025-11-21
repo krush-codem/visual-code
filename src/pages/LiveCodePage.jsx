@@ -40,12 +40,19 @@ import {
 // --- CSS Imports ---
 import "@xyflow/react/dist/style.css";
 
-// --- Language Sidebar (Internal Component) ---
+/**
+ * Mobile behavior:
+ * - When screen is narrow (< 768px) we render a tabbed single-panel view:
+ *   tabs: Languages/Explorer (left sidebar), Editor, Visualizer
+ * - On wider screens we keep the original ResizablePanelGroup layout.
+ */
+
 const LanguageSidebar = ({
   activeLang,
   onLangChange,
   viewMode,
   onViewModeChange,
+  compact = false,
 }) => {
   const languages = [
     { id: "javascript", name: "JavaScript", icon: Code },
@@ -55,7 +62,7 @@ const LanguageSidebar = ({
   ];
 
   return (
-    <div className="p-2 flex flex-col h-full">
+    <div className={`p-2 flex flex-col h-full ${compact ? "" : "min-h-0"}`}>
       <Button asChild variant="outline" size="sm" className="mb-4">
         <Link to="/">
           <Home className="mr-2 h-4 w-4" /> Back to Home
@@ -87,7 +94,6 @@ const LanguageSidebar = ({
         ))}
       </div>
 
-      {/* View Mode Toggle */}
       <div className="flex items-center space-x-2 mt-6 pt-4 border-t">
         <Label htmlFor="view-mode">Simple View</Label>
         <Switch
@@ -96,11 +102,6 @@ const LanguageSidebar = ({
           onCheckedChange={(checked) =>
             onViewModeChange(checked ? "simple" : "advanced")
           }
-          onKeyDown={(e) => {
-            if (e.key === " " || e.key === "Spacebar") {
-              e.preventDefault();
-            }
-          }}
         />
         <Label htmlFor="view-mode">Advanced</Label>
       </div>
@@ -108,7 +109,6 @@ const LanguageSidebar = ({
   );
 };
 
-// --- Main Page Component ---
 function LiveCodePage() {
   // --- STATE MANAGEMENT ---
   const [code, setCode] = useState("// Select a language and start coding!");
@@ -124,6 +124,12 @@ function LiveCodePage() {
 
   const pyodide = useRef(null);
   const editorRef = useRef(null);
+
+  // Responsive flags
+  const [isMobile, setIsMobile] = useState(
+    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  );
+  const [mobileTab, setMobileTab] = useState("editor"); // 'sidebar' | 'editor' | 'visualizer'
 
   // Prevent spacebar from being captured globally
   useEffect(() => {
@@ -146,6 +152,17 @@ function LiveCodePage() {
 
     window.addEventListener("keydown", handleKeyDown, true);
     return () => window.removeEventListener("keydown", handleKeyDown, true);
+  }, []);
+
+  // watch resize
+  useEffect(() => {
+    const onResize = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      if (!mobile) setMobileTab("editor");
+    };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   // --- PARSING LOGIC (EFFECT) ---
@@ -286,6 +303,99 @@ function LiveCodePage() {
     parseCode();
   }, [debouncedCode, activeLanguage, viewMode, setNodes, setEdges]);
 
+  // --- RENDER ---
+  // Mobile top tab component
+  const MobileTabs = ({ current, onChange }) => (
+    <div className="fixed top-0 left-0 right-0 z-20 bg-card px-2 py-1 flex gap-1 border-b">
+      <button
+        className={`flex-1 py-2 rounded ${
+          current === "sidebar" ? "bg-muted" : ""
+        }`}
+        onClick={() => onChange("sidebar")}
+      >
+        Languages
+      </button>
+      <button
+        className={`flex-1 py-2 rounded ${
+          current === "editor" ? "bg-muted" : ""
+        }`}
+        onClick={() => onChange("editor")}
+      >
+        Editor
+      </button>
+      <button
+        className={`flex-1 py-2 rounded ${
+          current === "visualizer" ? "bg-muted" : ""
+        }`}
+        onClick={() => onChange("visualizer")}
+      >
+        Visualizer
+      </button>
+    </div>
+  );
+
+  if (isMobile) {
+    // Mobile layout: single panel + tabs
+    return (
+      <div className="h-screen w-screen bg-background text-foreground relative">
+        <MobileTabs current={mobileTab} onChange={setMobileTab} />
+        <div className="h-full pt-12">
+          {" "}
+          {/* offset for fixed tabs */}
+          {mobileTab === "sidebar" && (
+            <div className="h-full overflow-auto p-2">
+              <LanguageSidebar
+                activeLang={activeLanguage}
+                onLangChange={(lang) => {
+                  setActiveLanguage(lang);
+                  setTimeout(() => {
+                    if (editorRef.current) editorRef.current.focus();
+                  }, 100);
+                }}
+                viewMode={viewMode}
+                onViewModeChange={setViewMode}
+                compact
+              />
+            </div>
+          )}
+          {mobileTab === "editor" && (
+            <div className="h-full">
+              {isParsing && (
+                <div className="absolute top-16 right-4 z-10">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              )}
+              <CodeEditor
+                content={code}
+                onContentChange={setCode}
+                path={activeLanguage}
+                language={activeLanguage}
+                editorRef={editorRef}
+              />
+            </div>
+          )}
+          {mobileTab === "visualizer" && (
+            <div className="h-full">
+              {isParsing && (
+                <div className="absolute top-16 right-4 z-10">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              )}
+              <Visualizer
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop / Tablet layout (original)
   return (
     <div className="h-screen w-screen bg-background text-foreground">
       <ResizablePanelGroup direction="horizontal" className="h-full w-full">
