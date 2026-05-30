@@ -1,5 +1,5 @@
 // src/components/CodeEditor.jsx
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
 
 const CodeEditor = ({
@@ -9,31 +9,31 @@ const CodeEditor = ({
   language,
   editorRef,
 }) => {
-  // Helper to store editor instance and force focus when the editor loads
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const handleEditorDidMount = (editor, monaco) => {
-    // Store the editor instance in the ref
     if (editorRef) {
       editorRef.current = editor;
     }
-    // Focus on mount
-    editor.focus();
+    // Only auto-focus on desktop to prevent unwanted keyboard popup on mobile
+    if (!isMobile) {
+      editor.focus();
+    }
   };
 
   return (
     <div
-      className="h-full w-full overflow-hidden"
+      className="h-full w-full overflow-hidden bg-[#1e1e1e]"
       onClick={() => {
-        // Force focus when clicking anywhere in the editor container
         if (editorRef?.current) {
           editorRef.current.focus();
-        }
-      }}
-      onKeyDown={(e) => {
-        // Ensure spacebar events reach the editor
-        if (e.key === " " || e.key === "Spacebar") {
-          if (editorRef?.current) {
-            editorRef.current.focus();
-          }
         }
       }}
     >
@@ -41,22 +41,37 @@ const CodeEditor = ({
         height="100%"
         language={language}
         theme="vs-dark"
-        // Use the path as the key to reset the editor when switching files/languages
         key={path || "scratchpad"}
         value={content}
         onChange={(value) => onContentChange(value || "")}
         onMount={handleEditorDidMount}
-        // Essential options for a smooth experience
         options={{
           minimap: { enabled: false },
-          fontSize: 14,
+          fontSize: isMobile ? 12 : 14, // Slightly smaller on mobile
           wordWrap: "on",
           automaticLayout: true,
           scrollBeyondLastLine: false,
-          padding: { top: 10 },
-          // Ensure the editor can receive keyboard input
+          padding: { top: 10, bottom: 10 },
+          // Mobile specific optimizations
+          scrollbar: {
+            vertical: isMobile ? 'visible' : 'auto',
+            horizontal: isMobile ? 'visible' : 'auto',
+            useShadows: false,
+            verticalHasArrows: false,
+            horizontalHasArrows: false,
+            verticalScrollbarSize: isMobile ? 10 : 14,
+            horizontalScrollbarSize: isMobile ? 10 : 14,
+          },
+          links: false, // Disable links to prevent accidental clicks
+          contextmenu: !isMobile, // Disable context menu on mobile
+          quickSuggestions: !isMobile, // Can be annoying on mobile keyboards
+          renderLineHighlight: "none",
+          hideCursorInOverviewRuler: true,
+          overviewRulerBorder: false,
           readOnly: false,
           domReadOnly: false,
+          // Important for touch
+          mouseWheelZoom: false,
         }}
       />
     </div>

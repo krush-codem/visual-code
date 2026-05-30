@@ -56,12 +56,12 @@ const ToolCard = ({ title, subLabel, description, icon: Icon, features, link, co
 
 const HomePage = () => {
   return (
-    <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-center p-6 selection:bg-indigo-500/30">
+    <div className="min-h-screen w-full bg-slate-950 flex flex-col items-center justify-start md:justify-center p-6 py-12 md:py-6 selection:bg-indigo-500/30 overflow-y-auto">
       {/* Background Decorative Pattern */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-indigo-600/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay" />
+        <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")` }} />
       </div>
 
       <div className="relative z-10 w-full max-w-6xl flex flex-col items-center">
@@ -72,18 +72,18 @@ const HomePage = () => {
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">Architecture v2.0 Active</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter leading-none italic">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-white tracking-tighter leading-[1.1] md:leading-none italic">
             Visualize Your <span className="bg-gradient-to-r from-indigo-400 via-blue-400 to-indigo-400 bg-clip-text text-transparent">Logic.</span>
           </h1>
           
-          <p className="max-w-2xl text-slate-400 text-lg md:text-xl font-medium leading-relaxed mx-auto">
+          <p className="max-w-2xl text-slate-400 text-base md:text-xl font-medium leading-relaxed mx-auto px-4">
             Deep architectural mapping and logic sequencing for modern engineering. 
             Stop reading code. Start seeing it.
           </p>
         </header>
 
         {/* Tool Cards Container */}
-        <div className="w-full flex flex-col md:flex-row gap-8 animate-in fade-in zoom-in-95 duration-1000 delay-300">
+        <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 animate-in fade-in zoom-in-95 duration-1000 delay-300 px-2 sm:px-0">
           <ToolCard 
             title="ReactArchitect"
             subLabel="Project Engine"
